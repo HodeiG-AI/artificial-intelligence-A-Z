@@ -30,8 +30,14 @@ length = 0
 
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
 brain = Dqn(5, 3, 0.9)
+# The action index will dictate which way the car will go
+# - Index 0: Go forward (roation 0)
+# - Index 1: Go to the right (roation 20)
+# - Index 2: Go to the left (roation -20)
 action2rotation = [0, 20, -20]
+# The last received reward
 last_reward = 0
+# Track the scores
 scores = []
 
 # Initializing the map
@@ -63,31 +69,37 @@ class Car(Widget):
     velocity = ReferenceListProperty(velocity_x, velocity_y)
     sensor1_x = NumericProperty(0)
     sensor1_y = NumericProperty(0)
-    sensor1 = ReferenceListProperty(sensor1_x, sensor1_y)
+    sensor1 = ReferenceListProperty(sensor1_x, sensor1_y)  # Front of the car
     sensor2_x = NumericProperty(0)
     sensor2_y = NumericProperty(0)
-    sensor2 = ReferenceListProperty(sensor2_x, sensor2_y)
+    sensor2 = ReferenceListProperty(sensor2_x, sensor2_y)  # Left of the car
     sensor3_x = NumericProperty(0)
     sensor3_y = NumericProperty(0)
-    sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)
-    signal1 = NumericProperty(0)
-    signal2 = NumericProperty(0)
-    signal3 = NumericProperty(0)
+    sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)  # Right of the car
+    # The sensors calculate the density of sound around each sensor
+    signal1 = NumericProperty(0)  # Signal received by sensor 1
+    signal2 = NumericProperty(0)  # Signal received by sensor 2
+    signal3 = NumericProperty(0)  # Signal received by sensor 3
 
     def move(self, rotation):
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
         self.angle = self.angle + self.rotation
         # (the sensors are the 3 colored squares in front of the car)
+        # We need to update them once the car has moved
         self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
         self.sensor2 = Vector(30, 0).rotate((self.angle + 30) % 360) + self.pos
         self.sensor3 = Vector(30, 0).rotate((self.angle - 30) % 360) + self.pos
+        # For every signal, we get the square of 20x20 pixels, we sum all the cells
+        # (1 has sand/0 has no sand) and divide by 400 to get the sand density
         self.signal1 = int(np.sum(sand[int(self.sensor1_x) - 10:int(self.sensor1_x) + 10,
                                   int(self.sensor1_y) - 10:int(self.sensor1_y) + 10])) / 400.
         self.signal2 = int(np.sum(sand[int(self.sensor2_x) - 10:int(self.sensor2_x) + 10,
                                   int(self.sensor2_y) - 10:int(self.sensor2_y) + 10])) / 400.
         self.signal3 = int(np.sum(sand[int(self.sensor3_x) - 10:int(self.sensor3_x) + 10,
                                   int(self.sensor3_y) - 10:int(self.sensor3_y) + 10])) / 400.
+        # We penalise the car when it gets to close to the wall
+        # The signals will return 1, the highest penalty
         if self.sensor1_x > longueur - 10 or self.sensor1_x < 10 or self.sensor1_y > largeur - 10 or self.sensor1_y < 10:
             self.signal1 = 1.
         if self.sensor2_x > longueur - 10 or self.sensor2_x < 10 or self.sensor2_y > largeur - 10 or self.sensor2_y < 10:
@@ -139,6 +151,9 @@ class Game(Widget):
         xx = goal_x - self.car.x
         yy = goal_y - self.car.y
         orientation = Vector(*self.car.velocity).angle((xx, yy)) / 180.
+        # These are the 5 inputs that go to the neural network
+        # orientation is provided twice, the last one is negative, according to the 
+        # tutor it helps with random decisions
         last_signal = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
         action = brain.update(last_reward, last_signal)
         scores.append(brain.score())
@@ -149,15 +164,19 @@ class Game(Widget):
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
 
+        # If car is on the sand, it will reduce the speed and get penalised
         if sand[int(self.car.x), int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
             last_reward = -1
         else:  # otherwise
+            # if the car is closer from the destination it gets a positive
+            # reward, otherwise if it is farther, it gets a negative reward
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
             last_reward = -0.2
             if distance < last_distance:
                 last_reward = 0.1
 
+        # These are to control when the car gets to close to the edges
         if self.car.x < 10:
             self.car.x = 10
             last_reward = -1
