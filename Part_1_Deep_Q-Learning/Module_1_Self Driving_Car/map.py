@@ -19,6 +19,10 @@ from kivy.clock import Clock
 # Importing the Dqn object from our AI in ai.py
 from ai import Dqn
 
+# Set the window size
+Config.set('graphics', 'width', '1100')  # By default it was 800
+Config.set('graphics', 'height', '825')  # By default it was 600
+
 # Adding this line if we don't want the right click to put a red point
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
