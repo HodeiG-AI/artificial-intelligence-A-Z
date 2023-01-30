@@ -80,7 +80,7 @@ class Car(Widget):
     sensor3_x = NumericProperty(0)
     sensor3_y = NumericProperty(0)
     sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)  # Right of the car
-    # The sensors calculate the density of sound around each sensor
+    # The sensors calculate the density of sand around each sensor
     signal1 = NumericProperty(0)  # Signal received by sensor 1
     signal2 = NumericProperty(0)  # Signal received by sensor 2
     signal3 = NumericProperty(0)  # Signal received by sensor 3

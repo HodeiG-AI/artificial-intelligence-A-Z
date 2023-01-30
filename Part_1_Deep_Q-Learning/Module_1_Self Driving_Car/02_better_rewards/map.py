@@ -80,7 +80,7 @@ class Car(Widget):
     sensor3_x = NumericProperty(0)
     sensor3_y = NumericProperty(0)
     sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)  # Right of the car
-    # The sensors calculate the density of sound around each sensor
+    # The sensors calculate the density of sand around each sensor
     signal1 = NumericProperty(0)  # Signal received by sensor 1
     signal2 = NumericProperty(0)  # Signal received by sensor 2
     signal3 = NumericProperty(0)  # Signal received by sensor 3
@@ -168,22 +168,29 @@ class Game(Widget):
         rotation = action2rotation[action]
         self.car.move(rotation)
         distance = np.sqrt((self.car.x - goal_x) ** 2 + (self.car.y - goal_y) ** 2)
+        ball1_distance = np.sqrt((self.car.sensor1_x - goal_x) ** 2 + (self.car.sensor1_x - goal_y) ** 2)
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
         self.ball3.pos = self.car.sensor3
+        #print(f"s1: {self.car.signal1} | s2: {self.car.signal2} | s3: {self.car.signal3} ")
 
         # If car is on the sand, it will reduce the speed and get penalised
         if sand[int(self.car.x), int(self.car.y)] > 0:
             self.car.velocity = Vector(1, 0).rotate(self.car.angle)
             last_reward = -1
         else:  # otherwise
-            # if the car is closer from the destination it gets a positive
-            # reward, otherwise if it is farther, it gets a negative reward
             self.car.velocity = Vector(6, 0).rotate(self.car.angle)
-            last_reward = -0.2
-            if distance < last_distance:
+            # If the car is approaching sand give a negative reward
+            if self.car.signal1 > 0:
+                last_reward = -0.1
+            # If it is getting closer to the destination and actually is going
+            # towards the destination, then give a positive reward
+            elif distance < last_distance and ball1_distance < distance:
                 last_reward = 0.1
-
+            # If the car is getting farther away, do not penalise as it might
+            # find a better way
+            else:
+                last_reward = 0
         # These are to control when the car gets to close to the edges
         if self.car.x < 10:
             self.car.x = 10

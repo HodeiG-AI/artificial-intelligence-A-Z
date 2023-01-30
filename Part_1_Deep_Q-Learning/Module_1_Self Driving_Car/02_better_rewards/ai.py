@@ -23,8 +23,8 @@ class Network(nn.Module):
         # The network will have only one hidden layer and therefore we will need
         # 2 full connections. The hidden layer will have 30, chosen by
         # experimentation
-        self.fc1 = nn.Linear(input_size, 30)  # Full connection 1
-        self.fc2 = nn.Linear(30, nb_action)  # Full connection 2
+        self.fc1 = nn.Linear(input_size, 500)  # Full connection 1
+        self.fc2 = nn.Linear(500, nb_action)  # Full connection 2
 
     def forward(self, state):
         # relu: Rectified Linear Unit
