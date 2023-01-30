@@ -137,7 +137,7 @@ class Game(Widget):
         print("Initialised")
         # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
         self.brain = Dqn(5, 3, 0.9)
-        self.pheromones = np.zeros((longueur, largeur))
+        self.pheromones_list = []
 
     def serve_car(self):
         self.car.center = self.center
@@ -203,19 +203,28 @@ class Game(Widget):
         if distance < 100:
             goal_x = self.width - goal_x
             goal_y = self.height - goal_y
-            pheromones = np.zeros((longueur, largeur))
+            self.clear_pheromones()
         last_distance = distance
-        #import pdb
-        #pdb.set_trace()
-        update_pheromones_track(self.canvas, self.car)
+        self.update_pheromones_track(keep=30)
 
-    def update_pheromones_track(self):
-        #import pdb
-        #pdb.set_trace()
+    def clear_pheromones(self, keep=0):
+        print(f"Clearing keep={keep}")
+        for pheromone in self.pheromones_list[keep:]:
+            self.canvas.remove(pheromone)
+        self.pheromones_list = self.pheromones_list[0:keep]
+
+    def update_pheromones_track(self, keep):
+        car_x = int(self.car.x)
+        car_y = int(self.car.y)
         with self.canvas:
             Color(0,0.8,0)
-            d = 15.
-            Ellipse(pos=(500 - d / 2, 500 - d / 2), size=(d, d))
+            d = 10.
+            elipse = Ellipse(pos=(car_x + self.car.height / 2,
+                         car_y + self.car.width / 2),
+                    size=(d, d),)
+            self.pheromones_list.insert(0, elipse)
+            self.clear_pheromones(keep=keep)
+
 
 # Adding the painting tools
 
