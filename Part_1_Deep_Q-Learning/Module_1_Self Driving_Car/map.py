@@ -132,13 +132,17 @@ class Game(Widget):
     ball2 = ObjectProperty(None)
     ball3 = ObjectProperty(None)
 
+    def __init__(self):
+        super().__init__()
+        print("Initialised")
+        # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
+        self.brain = Dqn(5, 3, 0.9)
+
     def serve_car(self):
         self.car.center = self.center
         self.car.velocity = Vector(6, 0)
 
     def update(self, dt):
-
-        global brain
         global last_reward
         global scores
         global last_distance
@@ -159,8 +163,8 @@ class Game(Widget):
         # orientation is provided twice, the last one is negative, according to the 
         # tutor it helps with random decisions
         last_signal = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
-        action = brain.update(last_reward, last_signal)
-        scores.append(brain.score())
+        action = self.brain.update(last_reward, last_signal)
+        scores.append(self.brain.score())
         rotation = action2rotation[action]
         self.car.move(rotation)
         distance = np.sqrt((self.car.x - goal_x) ** 2 + (self.car.y - goal_y) ** 2)
@@ -235,7 +239,8 @@ class MyPaintWidget(Widget):
 
 class CarApp(App):
     def build(self):
-        parent = Game()
+        self.game = Game()
+        parent = self.game
         parent.serve_car()
         Clock.schedule_interval(parent.update, 1.0 / 60.0)
         self.painter = MyPaintWidget()
@@ -258,13 +263,13 @@ class CarApp(App):
 
     def save(self, obj):
         print("saving brain...")
-        brain.save()
+        self.game.brain.save()
         plt.plot(scores)
         plt.show()
 
     def load(self, obj):
         print("loading last saved brain...")
-        brain.load()
+        self.game.brain.load()
 
 
 # Running the whole thing
