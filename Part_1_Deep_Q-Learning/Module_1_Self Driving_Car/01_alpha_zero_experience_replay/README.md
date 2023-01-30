@@ -40,3 +40,20 @@ As per this blog, it doesn't look like it works very well.
 
 https://towardsdatascience.com/how-to-implement-prioritized-experience-replay-for-a-deep-q-network-a710beecd77b
 https://github.com/Guillaume-Cr/lunar_lander_per
+
+
+# Conclusions
+
+The idea of just updating the rewards after reaching the destination didn't
+solve any issues.
+
+The car still gets stuck in some curves and as it doesn't have the full
+knowledge of the map, it cannot figure out what to do when it gets stuck in a
+curver.
+
+In another experiment, I will change how the rewards are given to the car, as
+I believe I found some contradictions. On the hand the car will get possitive
+reward when getting closer to the destination. But on the other hand it doesn't
+get negative reward when it detects sand in front. If the car knows that there
+is sand in front, why should it receive a positive reward? After all it will get
+stuck in the sand.
