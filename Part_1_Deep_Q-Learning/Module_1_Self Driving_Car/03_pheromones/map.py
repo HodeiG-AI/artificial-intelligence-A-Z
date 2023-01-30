@@ -85,7 +85,7 @@ class Car(Widget):
     signal2 = NumericProperty(0)  # Signal received by sensor 2
     signal3 = NumericProperty(0)  # Signal received by sensor 3
 
-    def move(self, rotation):
+    def move(self, rotation, pheromones_list):
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
         self.angle = self.angle + self.rotation
@@ -111,6 +111,12 @@ class Car(Widget):
         if self.sensor3_x > longueur - 10 or self.sensor3_x < 10 or self.sensor3_y > largeur - 10 or self.sensor3_y < 10:
             self.signal3 = 1.
 
+        # We penalise the car when it gets too close to the pheromones
+        for pheromone in pheromones_list:
+            if pheromone.pos[0] - 10 < self.sensor1_x < pheromone.pos[0] + 10 and \
+                    pheromone.pos[1] - 10 < self.sensor1_y < pheromone.pos[1] + 10:
+                print("Negative pheromone reward")
+                self.signal1 = 1.
 
 class Ball1(Widget):
     pass
@@ -167,7 +173,7 @@ class Game(Widget):
         action = self.brain.update(last_reward, last_signal)
         scores.append(self.brain.score())
         rotation = action2rotation[action]
-        self.car.move(rotation)
+        self.car.move(rotation, self.pheromones_list)
         distance = np.sqrt((self.car.x - goal_x) ** 2 + (self.car.y - goal_y) ** 2)
         self.ball1.pos = self.car.sensor1
         self.ball2.pos = self.car.sensor2
@@ -208,7 +214,6 @@ class Game(Widget):
         self.update_pheromones_track(keep=30)
 
     def clear_pheromones(self, keep=0):
-        print(f"Clearing keep={keep}")
         for pheromone in self.pheromones_list[keep:]:
             self.canvas.remove(pheromone)
         self.pheromones_list = self.pheromones_list[0:keep]
