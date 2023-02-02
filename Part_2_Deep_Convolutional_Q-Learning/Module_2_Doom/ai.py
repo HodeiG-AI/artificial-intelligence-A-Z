@@ -1,5 +1,10 @@
 # AI for Doom
-
+#
+# Installation
+###############
+# Install VizDoom and vizdoomgym
+# See:
+# https://towardsdatascience.com/building-the-ultimate-ai-agent-for-doom-using-dueling-double-deep-q-learning-ea2d5b8cdd9f
 
 
 # Importing the libraries
@@ -9,15 +14,46 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-
+import vizdoomgym
 # Importing the packages for OpenAI and Doom
 import gym
-from gym.wrappers import SkipWrapper
-from ppaquette_gym_doom.wrappers.action_space import ToDiscrete
+#from gym.wrappers import SkipWrapper
+#from ppaquette_gym_doom.wrappers.action_space import ToDiscrete
 
 # Importing the other Python files
 import experience_replay, image_preprocessing
 
+def skip_wrapper(repeat_count):
+    class SkipWrapper(gym.Wrapper):
+        """
+            Generic common frame skipping wrapper
+            Will perform action for `x` additional steps
+        """
+        def __init__(self, env):
+            super(SkipWrapper, self).__init__(env)
+            self.repeat_count = repeat_count
+            self.stepcount = 0
+
+        def _step(self, action):
+            done = False
+            total_reward = 0
+            current_step = 0
+            while current_step < (self.repeat_count + 1) and not done:
+                self.stepcount += 1
+                obs, reward, done, info = self.env.step(action)
+                total_reward += reward
+                current_step += 1
+            if 'skip.stepcount' in info:
+                raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking ' \
+                                        'the SkipWrapper wrappers.')
+            info['skip.stepcount'] = self.stepcount
+            return obs, total_reward, done, info
+
+        def _reset(self):
+            self.stepcount = 0
+            return self.env.reset()
+
+    return SkipWrapper
 
 # Part 1 - Building the AI
 
@@ -80,8 +116,12 @@ class AI:
 
 # Getting the Doom environment
 doom_env = image_preprocessing.PreprocessImage(
-    SkipWrapper(4)(ToDiscrete("minimal")(gym.make("ppaquette/DoomCorridor-v0"))), width=80, height=80, grayscale=True)
-doom_env = gym.wrappers.Monitor(doom_env, "videos", force=True)
+    skip_wrapper(4)(gym.make("VizdoomCorridor-v0")), width=80, height=80, grayscale=True)
+"""
+For video recording check this out:
+https://www.anyscale.com/blog/an-introduction-to-reinforcement-learning-with-openai-gym-rllib-and-google
+"""
+#doom_env = gym.wrappers.Monitor(doom_env, "videos", force=True)
 print("Environment created!")
 number_actions = doom_env.action_space.n
 

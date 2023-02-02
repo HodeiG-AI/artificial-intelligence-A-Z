@@ -2,7 +2,7 @@
 
 # Importing the libraries
 import numpy as np
-from scipy.misc import imresize
+import cv2
 from gym.core import ObservationWrapper
 from gym.spaces.box import Box
 
@@ -19,10 +19,15 @@ class PreprocessImage(ObservationWrapper):
         self.observation_space = Box(0.0, 1.0, [n_colors, height, width])
 
     def _observation(self, img):
+        import pdb
+        pdb.set_trace()
         img = self.crop(img)
-        img = imresize(img, self.img_size)
+        img = cv2.resize(src=img, dsize=self.img_size)
         if self.grayscale:
             img = img.mean(-1, keepdims=True)
         img = np.transpose(img, (2, 0, 1))
         img = img.astype('float32') / 255.
         return img
+
+    def reset(self):
+        return self.env.reset()
