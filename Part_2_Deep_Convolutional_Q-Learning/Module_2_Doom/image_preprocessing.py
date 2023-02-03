@@ -11,16 +11,14 @@ from gym.spaces.box import Box
 
 class PreprocessImage(ObservationWrapper):
     def __init__(self, env, height=64, width=64, grayscale=True, crop=lambda img: img):
-        super(PreprocessImage, self).__init__(env)
+        super().__init__(env)
         self.img_size = (height, width)
         self.grayscale = grayscale
         self.crop = crop
         n_colors = 1 if self.grayscale else 3
         self.observation_space = Box(0.0, 1.0, [n_colors, height, width])
 
-    def _observation(self, img):
-        import pdb
-        pdb.set_trace()
+    def observation(self, img):
         img = self.crop(img)
         img = cv2.resize(src=img, dsize=self.img_size)
         if self.grayscale:
@@ -30,4 +28,14 @@ class PreprocessImage(ObservationWrapper):
         return img
 
     def reset(self):
-        return self.env.reset()
+        """
+        We need to override the reset, because it should return a tuple of
+        (obs, info). However, vizdoomgym only return obs.
+
+        See:
+        https://github.com/shakenes/vizdoomgym/blob/
+        3ab9052de6fb4172544d35103857e3577526b57c/vizdoomgym/envs/vizdoomenv.py#L129
+        """
+        obs = self.env.reset()
+        # Return observation and info=None
+        return self.observation(obs), None

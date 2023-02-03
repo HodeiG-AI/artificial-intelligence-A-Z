@@ -33,8 +33,9 @@ def skip_wrapper(repeat_count):
             super(SkipWrapper, self).__init__(env)
             self.repeat_count = repeat_count
             self.stepcount = 0
+            self.env.checked_step = True
 
-        def _step(self, action):
+        def step(self, action):
             done = False
             total_reward = 0
             current_step = 0
@@ -47,9 +48,18 @@ def skip_wrapper(repeat_count):
                 raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking ' \
                                         'the SkipWrapper wrappers.')
             info['skip.stepcount'] = self.stepcount
-            return obs, total_reward, done, info
+            """
+            truncated (bool): whether a truncation condition outside the scope of the MDP is satisfied.
+               Typically a timelimit, but could also be used to indicate agent physically going out of bounds.
+               Can be used to end the episode prematurely before a `terminal state` is reached.
 
-        def _reset(self):
+            See https://github.com/openai/gym/blob/master/gym/core.py
+            """
+            truncated = False
+            return obs, total_reward, done, truncated, info
+
+        def reset(self):
+            print("Step count reset")
             self.stepcount = 0
             return self.env.reset()
 
@@ -94,7 +104,7 @@ class SoftmaxBody(nn.Module):
 
     def forward(self, outputs):
         probs = F.softmax(outputs * self.T)
-        actions = probs.multinomial()
+        actions = probs.multinomial(num_samples=1)
         return actions
 
 

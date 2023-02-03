@@ -18,12 +18,14 @@ class NStepProgress:
         self.n_step = n_step
 
     def __iter__(self):
-        state = self.env.reset()
+        state, info = self.env.reset()
         history = deque()
         reward = 0.0
+        self.states = []
         while True:
+            self.states.append(state)
             action = self.ai(np.array([state]))[0][0]
-            next_state, r, is_done, _ = self.env.step(action)
+            next_state, r, is_done, truncated, _ = self.env.step(action)
             reward += r
             history.append(Step(state=state, action=action, reward=r, done=is_done))
             while len(history) > self.n_step + 1:
@@ -37,12 +39,14 @@ class NStepProgress:
                 while len(history) >= 1:
                     yield tuple(history)
                     history.popleft()
+                print(f"Appending reward {reward}")
                 self.rewards.append(reward)
                 reward = 0.0
-                state = self.env.reset()
+                state, info = self.env.reset()
                 history.clear()
 
     def rewards_steps(self):
+        print(self.rewards)
         rewards_steps = self.rewards
         self.rewards = []
         return rewards_steps
