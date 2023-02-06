@@ -9,7 +9,6 @@ Step = namedtuple('Step', ['state', 'action', 'reward', 'done'])
 
 
 # Making the AI progress on several (n_step) steps
-
 class NStepProgress:
     def __init__(self, env, ai, n_step):
         self.ai = ai
@@ -24,7 +23,10 @@ class NStepProgress:
         self.states = []
         while True:
             self.states.append(state)
-            action = self.ai(np.array([state]))[0][0]
+            # If the action is not converted to int, the self.env.step call
+            # doesn't work properly and the rewards that are returned are never
+            # positive
+            action = int(self.ai(np.array([state]))[0][0])
             next_state, r, is_done, truncated, _ = self.env.step(action)
             reward += r
             history.append(Step(state=state, action=action, reward=r, done=is_done))
