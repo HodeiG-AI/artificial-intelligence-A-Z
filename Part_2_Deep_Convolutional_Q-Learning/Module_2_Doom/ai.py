@@ -14,20 +14,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-#import vizdoomgym
-from vizdoom import gym_wrapper  # noqa
 # Importing the packages for OpenAI and Doom
+from vizdoom import gym_wrapper  # noqa
 import gym
-#from gym.wrappers import SkipWrapper
-#from ppaquette_gym_doom.wrappers.action_space import ToDiscrete
-
 # Importing the other Python files
 import experience_replay, image_preprocessing
 
 # Part 1 - Building the AI
 
 # Making the brain
-
 class CNN(nn.Module):
     def __init__(self, number_actions):
         super(CNN, self).__init__()

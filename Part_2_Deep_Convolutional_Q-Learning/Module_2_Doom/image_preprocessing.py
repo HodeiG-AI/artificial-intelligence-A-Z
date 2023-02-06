@@ -21,8 +21,6 @@ class PreprocessImage(ObservationWrapper):
     def observation(self, obs):
         img = obs['screen']
         img = self.crop(img)
-        #import pdb
-        #pdb.set_trace()
         img = cv2.resize(src=img, dsize=self.img_size)
         if self.grayscale:
             img = img.mean(-1, keepdims=True)
