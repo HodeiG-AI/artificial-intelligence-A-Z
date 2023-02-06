@@ -14,7 +14,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-import vizdoomgym
+#import vizdoomgym
+from vizdoom import gym_wrapper  # noqa
 # Importing the packages for OpenAI and Doom
 import gym
 #from gym.wrappers import SkipWrapper
@@ -41,7 +42,7 @@ def skip_wrapper(repeat_count):
             current_step = 0
             while current_step < (self.repeat_count + 1) and not done:
                 self.stepcount += 1
-                obs, reward, done, info = self.env.step(action)
+                obs, reward, done, truncated, info = self.env.step(action)
                 total_reward += reward
                 current_step += 1
             if 'skip.stepcount' in info:
@@ -55,8 +56,7 @@ def skip_wrapper(repeat_count):
 
             See https://github.com/openai/gym/blob/master/gym/core.py
             """
-            truncated = False
-            return obs, total_reward, done, truncated, info
+            return obs['screen'], total_reward, done, truncated, info
 
         def reset(self):
             print("Step count reset")
@@ -123,10 +123,16 @@ class AI:
 
 
 # Part 2 - Training the AI with Deep Convolutional Q-Learning
-
+"""
+import pdb
+pdb.set_trace()
+gym.make("VizdoomCorridor-v0", render_mode="human")
 # Getting the Doom environment
 doom_env = image_preprocessing.PreprocessImage(
-    skip_wrapper(4)(gym.make("VizdoomCorridor-v0")), width=80, height=80, grayscale=True)
+    skip_wrapper(4)(gym.make("VizdoomCorridor-v0", render_mode="human")), width=80, height=80, grayscale=True)
+"""
+doom_env = image_preprocessing.PreprocessImage(
+    gym.make("VizdoomCorridor-v0", frame_skip=4, render_mode="human"), width=80, height=80, grayscale=True)
 """
 For video recording check this out:
 https://www.anyscale.com/blog/an-introduction-to-reinforcement-learning-with-openai-gym-rllib-and-google
@@ -190,6 +196,7 @@ optimizer = optim.Adam(cnn.parameters(), lr=0.001)
 nb_epochs = 100
 for epoch in range(1, nb_epochs + 1):
     memory.run_steps(200)
+    #doom_env.render()
     for batch in memory.sample_batch(128):
         inputs, targets = eligibility_trace(batch)
         inputs, targets = Variable(inputs), Variable(targets)
