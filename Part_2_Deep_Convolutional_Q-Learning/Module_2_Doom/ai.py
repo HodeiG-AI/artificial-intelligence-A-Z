@@ -14,61 +14,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-import vizdoomgym
 # Importing the packages for OpenAI and Doom
+from vizdoom import gym_wrapper  # noqa
 import gym
-#from gym.wrappers import SkipWrapper
-#from ppaquette_gym_doom.wrappers.action_space import ToDiscrete
-
 # Importing the other Python files
 import experience_replay, image_preprocessing
-
-def skip_wrapper(repeat_count):
-    class SkipWrapper(gym.Wrapper):
-        """
-            Generic common frame skipping wrapper
-            Will perform action for `x` additional steps
-        """
-        def __init__(self, env):
-            super(SkipWrapper, self).__init__(env)
-            self.repeat_count = repeat_count
-            self.stepcount = 0
-            self.env.checked_step = True
-
-        def step(self, action):
-            done = False
-            total_reward = 0
-            current_step = 0
-            while current_step < (self.repeat_count + 1) and not done:
-                self.stepcount += 1
-                obs, reward, done, info = self.env.step(action)
-                total_reward += reward
-                current_step += 1
-            if 'skip.stepcount' in info:
-                raise gym.error.Error('Key "skip.stepcount" already in info. Make sure you are not stacking ' \
-                                        'the SkipWrapper wrappers.')
-            info['skip.stepcount'] = self.stepcount
-            """
-            truncated (bool): whether a truncation condition outside the scope of the MDP is satisfied.
-               Typically a timelimit, but could also be used to indicate agent physically going out of bounds.
-               Can be used to end the episode prematurely before a `terminal state` is reached.
-
-            See https://github.com/openai/gym/blob/master/gym/core.py
-            """
-            truncated = False
-            return obs, total_reward, done, truncated, info
-
-        def reset(self):
-            print("Step count reset")
-            self.stepcount = 0
-            return self.env.reset()
-
-    return SkipWrapper
 
 # Part 1 - Building the AI
 
 # Making the brain
-
 class CNN(nn.Module):
     def __init__(self, number_actions):
         super(CNN, self).__init__()
@@ -123,10 +77,8 @@ class AI:
 
 
 # Part 2 - Training the AI with Deep Convolutional Q-Learning
-
-# Getting the Doom environment
 doom_env = image_preprocessing.PreprocessImage(
-    skip_wrapper(4)(gym.make("VizdoomCorridor-v0")), width=80, height=80, grayscale=True)
+    gym.make("VizdoomCorridor-v0", frame_skip=4, render_mode="human"), width=80, height=80, grayscale=True)
 """
 For video recording check this out:
 https://www.anyscale.com/blog/an-introduction-to-reinforcement-learning-with-openai-gym-rllib-and-google
@@ -202,7 +154,7 @@ for epoch in range(1, nb_epochs + 1):
     ma.add(rewards_steps)
     avg_reward = ma.average()
     print("Epoch: %s, Average Reward: %s" % (str(epoch), str(avg_reward)))
-    if avg_reward >= 1500:
+    if avg_reward >= 180:
         print("Congratulations, your AI wins")
         break
 
