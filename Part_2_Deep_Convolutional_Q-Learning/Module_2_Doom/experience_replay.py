@@ -28,7 +28,6 @@ class NStepProgress:
             # positive
             action = int(self.ai(np.array([state]))[0][0])
             next_state, r, is_done, truncated, _ = self.env.step(action)
-            print(f"Action: {action} | R: {r} | D: {is_done} | T: {truncated}")
             reward += r
             history.append(Step(state=state, action=action, reward=r, done=is_done))
             while len(history) > self.n_step + 1:
