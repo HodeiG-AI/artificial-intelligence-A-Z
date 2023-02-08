@@ -158,6 +158,8 @@ memory = experience_replay.ReplayMemory(n_steps=n_steps, capacity=10000)
 # for the training purposes either. So, for instance the last step (state) will
 # never be considered for training. I think the below algorithm should have used
 # used all the steps with accumulated rewards.
+#
+# However, according to the tutor, this is the right thing to return...
 def eligibility_trace(batch):
     gamma = 0.99
     inputs = []
@@ -221,7 +223,9 @@ for epoch in range(1, nb_epochs + 1):
     ma.add(rewards_steps)
     avg_reward = ma.average()
     print("Epoch: %s, Average Reward: %s" % (str(epoch), str(avg_reward)))
-    if avg_reward >= 180:
+    # The average reward of 150 has been calculated taking into account that
+    # getting to the vest gives a reward of 100 points
+    if avg_reward >= 150:
         print("Congratulations, your AI wins")
         break
 
